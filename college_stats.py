@@ -354,8 +354,8 @@ def job():
     """
     """
     
-    start_year = 2005
-    end_year = 2009
+    start_year = 2018
+    end_year = 2018
     
     url_list = get_all_fbs_teams_for_year_range(start_year, end_year)
     
@@ -372,21 +372,10 @@ def job():
     save_df_to_csv(df3, 'Data/defense.csv', col_headers=False, index=True,
                    index_label='PlayerYearID', mode='a')
     
-    
     rush_rec_stats_list = ['RUSH ATT', 'RUSH YDS', 'RUSH TD', 'REC', 'REC YDS', 'REC TD']
     rush_rec_shares = append_market_share_data('Data/rush_receiving.csv', rush_rec_stats_list)
     
     def_stats_list = ['SOLO TCKL', 'TFL', 'SACK', 'INT', 'PBU', 'FF']
     def_shares = append_market_share_data('Data/defense.csv', def_stats_list)
     
-    """
-    perc_def = def_shares[def_shares['SOLO TCKL'] > 1]
-    test = pd.DataFrame(perc_def['SOLO TCKL'].rank(pct=True))
-    
-    test_df = def_shares.merge(test, left_index=True, right_index=True)
-    """
-    
     return df1, df2, df3, rush_rec_shares, def_shares
-    
-    
-    

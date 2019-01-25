@@ -19,7 +19,7 @@ combine <- fread("Data/combine.csv")
 ui <- navbarPage("Mesh Point Scouting",
                  theme = shinytheme("cosmo"),
            
-  tabPanel("Raw Stats",
+  tabPanel("Quarterbacks",
    
     fluidRow(
      
@@ -45,7 +45,7 @@ ui <- navbarPage("Mesh Point Scouting",
     )                 
   ),
   
-  tabPanel("Market Share Stats",
+  tabPanel("Running Backs",
            
     fluidRow(
      
@@ -71,7 +71,7 @@ ui <- navbarPage("Mesh Point Scouting",
     ) 
   ),
   
-  tabPanel("Combine Data",
+  tabPanel("Pass Catchers",
    
     fluidRow(
      
@@ -84,6 +84,84 @@ ui <- navbarPage("Mesh Point Scouting",
       column(4,
             
         "test"
+            
+      ),
+     
+      column(4,
+            
+        img(src='logo.jpg',
+            width = 250,
+            align = "right"
+        )
+      )
+    ) 
+  ),
+  
+  tabPanel("Offensive Line",
+   
+    fluidRow(
+     
+      column(4,
+            
+             "test"
+            
+      ),
+     
+      column(4,
+            
+             "test"
+            
+      ),
+     
+      column(4,
+            
+        img(src='logo.jpg',
+            width = 250,
+            align = "right"
+        )
+      )
+    ) 
+  ),
+  
+  tabPanel("Front Seven",
+           
+    fluidRow(
+     
+      column(4,
+            
+             "test"
+            
+      ),
+     
+      column(4,
+            
+             "test"
+            
+      ),
+     
+      column(4,
+            
+        img(src='logo.jpg',
+            width = 250,
+            align = "right"
+        )
+      )
+    ) 
+  ),
+  
+  tabPanel("Secondary",
+   
+    fluidRow(
+     
+      column(4,
+            
+             "test"
+            
+      ),
+     
+      column(4,
+            
+             "test"
             
       ),
      

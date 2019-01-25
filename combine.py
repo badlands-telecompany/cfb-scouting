@@ -16,12 +16,13 @@ from util import get_soup
 from util import save_df_to_csv
 from util import open_csv_to_df
 
+BASE_URL = 'https://www.pro-football-reference.com'
 
 def scrape_combine_results(year):
     """
     """
     
-    url = 'https://www.pro-football-reference.com/draft/{}-combine.htm'.format(year)
+    url = BASE_URL + '/draft/{}-combine.htm'.format(year)
     soup = get_soup(url)
     
     table = soup.find('table', attrs={'id': 'combine'})
@@ -39,7 +40,7 @@ def scrape_combine_results(year):
         a_tag = th.a
         
         if a_tag:
-            nfl_stats = 'https://www.pro-football-reference.com' + a_tag.get('href')
+            nfl_stats = BASE_URL + a_tag.get('href')
         else:
             nfl_stats = None
         
@@ -139,4 +140,3 @@ def job():
                    index_label='PlayerYearID', mode='a')
     
     return df
-
