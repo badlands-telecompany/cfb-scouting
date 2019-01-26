@@ -40,9 +40,11 @@ def scrape_combine_results(year):
         a_tag = th.a
         
         if a_tag:
-            nfl_stats = BASE_URL + a_tag.get('href')
+            nfl_stats = a_tag.get('href')
+            nfl_id = nfl_stats[11:-4]
         else:
             nfl_stats = None
+            nfl_id = None
         
         pos = row.find('td', attrs={'data-stat':'pos'}).get_text().strip()
         team = row.find('td', attrs={'data-stat':'school_name'}).get_text().strip()
@@ -50,10 +52,12 @@ def scrape_combine_results(year):
         is_link = row.find('td', attrs={'data-stat':'college'}).a
         
         if is_link:
-            college_stats = is_link.get('href')
-            player_id = college_stats[45:-5]
+            college_stats = is_link.get('href')[32:]
+            college_id = college_stats[13:-5]
+            player_id = college_id
         else:
             college_stats = None
+            college_id = None
             player_id = name.lower().replace(' ', '-') + '-' + str(year)
         
         height_old = row.find('td', attrs={'data-stat':'height'}).get_text()
@@ -104,7 +108,9 @@ def scrape_combine_results(year):
                                 'CONE': cone,
                                 'SHUT': shuttle,
                                 'College Link': college_stats,
-                                'NFL Link': nfl_stats}
+                                'NFL Link': nfl_stats,
+                                'CollegeID': college_id,
+                                'PlayerID': nfl_id}
 
     return data_dict
 

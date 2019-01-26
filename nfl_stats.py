@@ -215,7 +215,7 @@ def get_nfl_season_stats(url):
                                         'TD PCT': td_pct,
                                         'INT PCT': int_pct,
                                         'SACK PCT': sack_pct,
-                                        'Player ID': player_id,
+                                        'PlayerID': player_id,
                                         'Link': player_stats_page}
         
     for row in rows_rush_rec:
@@ -325,7 +325,7 @@ def get_nfl_season_stats(url):
                                          'REC YPC': recypc,
                                          'REC TD': rectd,
                                          'FMB': fmb,
-                                         'Player ID': player_id,
+                                         'PlayerID': player_id,
                                          'Link': player_stats_page}
     
     for row in rows_defense:
@@ -405,7 +405,7 @@ def get_nfl_season_stats(url):
                                         'INT': def_int,
                                         'PBU': pbu,
                                         'FF': ff,
-                                        'Player ID': player_id,
+                                        'PlayerID': player_id,
                                         'Link': player_stats_page}
         
     return passing_dict, rush_rec_dict, defense_dict

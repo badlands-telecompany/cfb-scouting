@@ -126,7 +126,7 @@ def get_cfb_season_stats(url):
                                         'PASS RTG': pass_rtg,
                                         'TD PCT': td_pct,
                                         'INT PCT': int_pct,
-                                        'Player ID': player_id,
+                                        'CollegeID': player_id,
                                         'Link': player_stats_page}
         
     for row in rows_rush_rec:
@@ -207,7 +207,7 @@ def get_cfb_season_stats(url):
                                          'REC YDS': recyds,
                                          'REC YPC': recypc,
                                          'REC TD': rectd,
-                                         'Player ID': player_id,
+                                         'CollegeID': player_id,
                                          'Link': player_stats_page}
     
     for row in rows_defense:
@@ -272,7 +272,7 @@ def get_cfb_season_stats(url):
                                         'INT': def_int,
                                         'PBU': pbu,
                                         'FF': ff,
-                                        'Player ID': player_id,
+                                        'CollegeID': player_id,
                                         'Link': player_stats_page}
         
     return passing_dict, rush_rec_dict, defense_dict
