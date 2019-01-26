@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-College Stats Scraper
+NFL Stats Scraper
 
 Author: Federico Scivittaro
-Last Updated: 12/12/18
+Last Updated: 1/25/18
 
 Description
 """
@@ -14,37 +14,43 @@ import pandas as pd
 
 from util import get_soup
 from util import save_df_to_csv
-from util import open_csv_to_df
+from manage_stats import get_season_stats_for_url_list
+from manage_stats import append_market_share_data
 
-BASE_URL = 'https://www.sports-reference.com'
+BASE_URL = 'https://www.pro-football-reference.com'
 
 
-def get_all_fbs_teams(year):
+def get_all_nfl_teams(year):
     """
-    Get all FBS teams and links to their season stats for a given year.
+    Get all NFL teams and links to their season stats for a given year.
     """
     
-    url = BASE_URL + '/cfb/years/{}-standings.html'.format(year)
+    url = BASE_URL + '/years/{}/'.format(year)
     soup = get_soup(url)
     
-    table = soup.find('table', attrs={'id':'standings'})
+    table = soup.find('table', attrs={'id':'team_stats'})
     rows = table.find_all('tr')
     
     team_list = []
     
     for row in rows:
-        team = row.find('td', attrs={'data-stat':'school_name'})
+        team = row.find('td', attrs={'data-stat':'team'})
         
         if not team:
             continue
         
-        team_link = team.find('a').get('href')        
+        team_link = team.find('a')
+        
+        if not team_link:
+            continue
+        
+        team_link = team_link.get('href')
         team_list.append(team_link)
         
     return team_list
 
 
-def get_all_fbs_teams_for_year_range(start_year, end_year):
+def get_all_nfl_teams_for_year_range(start_year, end_year):
     """
     Get all FBS teams and link to their season stats for a range of years.
     """
@@ -54,7 +60,7 @@ def get_all_fbs_teams_for_year_range(start_year, end_year):
     for year in range(start_year, end_year + 1):
         print(year)
         
-        team_list = get_all_fbs_teams(year)
+        team_list = get_all_nfl_teams(year)
         full_team_list += team_list
         
         wait_time = random.randint(3, 15)
@@ -63,11 +69,12 @@ def get_all_fbs_teams_for_year_range(start_year, end_year):
     return full_team_list
 
 
-def get_season_stats(url):
+def get_nfl_season_stats(url):
     """
     """
     
     full_url = BASE_URL + url
+    print(full_url)
     soup = get_soup(full_url)
     
     header = soup.find('h1')
@@ -77,9 +84,9 @@ def get_season_stats(url):
     
     passing = soup.find('table', attrs={'id':'passing'})
     rush_rec = soup.find('table', attrs={'id':'rushing_and_receiving'})
-    defense = soup.find('table', attrs={'id': 'defense_and_fumbles'})
+    defense = soup.find('table', attrs={'id': 'defense'})
     
-    rows_passing = passing.find_all('tr')[2:]
+    rows_passing = passing.find_all('tr')[1:]
     rows_rush_rec = rush_rec.find_all('tr')[2:]
     rows_defense = defense.find_all('tr')[2:]
     
@@ -95,36 +102,119 @@ def get_season_stats(url):
         
         name = a.get_text()
         player_stats_page = a.get('href')
-        player_id = player_stats_page[13:-5]
+        player_id = player_stats_page[11:-4]
         player_year_id = player_id + '-' + str(year)
         
-        cmp = int(row.find('td', attrs={'data-stat':'pass_cmp'}).get_text())
-        passatt = int(row.find('td', attrs={'data-stat':'pass_att'}).get_text())
-        cmp_pct = float(row.find('td', attrs={'data-stat':'pass_cmp_pct'}).get_text())
-        pass_yds = int(row.find('td', attrs={'data-stat':'pass_yds'}).get_text())
-        ypa = float(row.find('td', attrs={'data-stat':'pass_yds_per_att'}).get_text())
-        adj_ypa = float(row.find('td', attrs={'data-stat':'adj_pass_yds_per_att'}).get_text())
-        passtd = int(row.find('td', attrs={'data-stat':'pass_td'}).get_text())
-        passint = int(row.find('td', attrs={'data-stat':'pass_int'}).get_text())
-        pass_rtg = float(row.find('td', attrs={'data-stat':'pass_rating'}).get_text())
-        
-        td_pct = round(passtd / passatt * 100, 2)
-        int_pct = round(passint / passatt * 100, 2)
+        age = int(row.find('td', attrs={'data-stat':'age'}).get_text())
+        gp = int(row.find('td', attrs={'data-stat':'g'}).get_text())
+        gs = int(row.find('td', attrs={'data-stat':'gs'}).get_text())
+
+        cmp = row.find('td', attrs={'data-stat':'pass_cmp'}).get_text()
+
+        if cmp:
+            cmp = int(cmp)
+        else:
+            cmp = 0
+
+        passatt = row.find('td', attrs={'data-stat':'pass_att'}).get_text()
+
+        if passatt:
+            passatt = int(passatt)
+        else:
+            passatt = 0
+
+        pass_yds = row.find('td', attrs={'data-stat':'pass_yds'}).get_text()
+
+        if pass_yds:
+            pass_yds = int(pass_yds)
+        else:
+            pass_yds = 0
+
+        passtd = row.find('td', attrs={'data-stat':'pass_td'}).get_text()
+
+        if passtd:
+            passtd = int(passtd)
+        else:
+            passtd = 0
+
+        passint = row.find('td', attrs={'data-stat':'pass_int'}).get_text()
+
+        if passint:
+            passint = int(passint)
+        else:
+            passint = 0
+
+        pass_ypa = row.find('td', attrs={'data-stat':'pass_yds_per_att'}).get_text()
+
+        if pass_ypa:
+            pass_ypa = float(pass_ypa)
+        else:
+            pass_ypa = 0
+
+        pass_adj_ypa = row.find('td', attrs={'data-stat':'pass_adj_yds_per_att'}).get_text()
+
+        if pass_adj_ypa:
+            pass_adj_ypa = float(pass_adj_ypa)
+        else:
+            pass_adj_ypa = 0
+
+        pass_rtg = row.find('td', attrs={'data-stat':'pass_rating'}).get_text()
+
+        if pass_rtg:
+            pass_rtg = float(pass_rtg)
+        else:
+            pass_rtg = 0
+
+        pass_any_a = row.find('td', attrs={'data-stat':'pass_adj_net_yds_per_att'}).get_text()
+
+        if pass_any_a:
+            pass_any_a = float(pass_any_a)
+        else:
+            pass_any_a = 0
+
+        sacks = row.find('td', attrs={'data-stat':'pass_sacked'}).get_text()
+
+        if sacks:
+            sacks = int(sacks)
+        else:
+            sacks = 0
+
+        sack_pct = row.find('td', attrs={'data-stat':'pass_sacked_perc'}).get_text()
+
+        if sack_pct:
+            sack_pct = float(sack_pct)
+        else:
+            sack_pct = 0
+
+        if passatt != 0:
+            cmp_pct = round(cmp / passatt * 100, 1)
+            td_pct = round(passtd / passatt * 100, 2)
+            int_pct = round(passint / passatt * 100, 2)
+        else:
+            cmp_pct = 0
+            td_pct = 0
+            int_pct = 0
         
         passing_dict[player_year_id] = {'Name': name,
                                         'Team': team,
                                         'Year': year,
+                                        'Age': age,
+                                        'GP': gp,
+                                        'GS': gs,
                                         'CMP': cmp,
                                         'ATT': passatt,
                                         'CMP PCT': cmp_pct,
                                         'YARDS': pass_yds,
-                                        'YPA': ypa,
-                                        'ADJ YPA': adj_ypa,
+                                        'YPA': pass_ypa,
+                                        'ADJ YPA': pass_adj_ypa,
                                         'TD': passtd,
                                         'INT': passint,
+                                        'SACK': sacks,
                                         'PASS RTG': pass_rtg,
+                                        'PASS ANY/A': pass_any_a,
                                         'TD PCT': td_pct,
                                         'INT PCT': int_pct,
+                                        'SACK PCT': sack_pct,
                                         'Player ID': player_id,
                                         'Link': player_stats_page}
         
@@ -136,9 +226,13 @@ def get_season_stats(url):
         
         name = a.get_text()
         player_stats_page = a.get('href')
-        player_id = player_stats_page[13:-5]
+        player_id = player_stats_page[11:-4]
         player_year_id = player_id + '-' + str(year)
         
+        age = int(row.find('td', attrs={'data-stat':'age'}).get_text())
+        gp = int(row.find('td', attrs={'data-stat':'g'}).get_text())
+        gs = int(row.find('td', attrs={'data-stat':'gs'}).get_text())
+
         rushatt = row.find('td', attrs={'data-stat':'rush_att'}).get_text()
         
         if rushatt:
@@ -167,6 +261,13 @@ def get_season_stats(url):
         else:
             rushtd = 0
         
+        tgt = row.find('td', attrs={'data-stat':'targets'}).get_text()
+
+        if tgt:
+            tgt = int(tgt)
+        else:
+            tgt = 0
+
         rec = row.find('td', attrs={'data-stat':'rec'}).get_text()
         
         if rec:
@@ -194,18 +295,36 @@ def get_season_stats(url):
             rectd = int(rectd)
         else:
             rectd = 0
+
+        fmb = row.find('td', attrs={'data-stat':'fumbles'}).get_text()
+
+        if fmb:
+            fmb = int(fmb)
+        else:
+            fmb = 0
+
+        if tgt != 0:
+            catch_pct = round(rec / tgt * 100, 1)
+        else:
+            catch_pct = 0
         
         rush_rec_dict[player_year_id] = {'Name': name,
                                          'Team': team,
                                          'Year': year,
+                                         'Age': age,
+                                         'GP': gp,
+                                         'GS': gs,
                                          'RUSH ATT': rushatt,
                                          'RUSH YDS': rushyds,
                                          'RUSH YPA': rushypa,
                                          'RUSH TD': rushtd,
+                                         'TGT': tgt,
                                          'REC': rec,
+                                         'CATCH PCT': catch_pct,
                                          'REC YDS': recyds,
                                          'REC YPC': recypc,
                                          'REC TD': rectd,
+                                         'FMB': fmb,
                                          'Player ID': player_id,
                                          'Link': player_stats_page}
     
@@ -217,9 +336,13 @@ def get_season_stats(url):
         
         name = a.get_text()
         player_stats_page = a.get('href')
-        player_id = player_stats_page[13:-5]
+        player_id = player_stats_page[11:-4]
         player_year_id = player_id + '-' + str(year)
         
+        age = int(row.find('td', attrs={'data-stat':'age'}).get_text())
+        gp = int(row.find('td', attrs={'data-stat':'g'}).get_text())
+        gs = int(row.find('td', attrs={'data-stat':'gs'}).get_text())
+
         solo_tckl = row.find('td', attrs={'data-stat':'tackles_solo'}).get_text()
         
         if solo_tckl:
@@ -239,7 +362,14 @@ def get_season_stats(url):
         if sacks:
             sacks = float(sacks)
         else:
-            sacks = 0        
+            sacks = 0
+
+        qb_hit = row.find('td', attrs={'data-stat':'qb_hits'}).get_text()
+
+        if qb_hit:
+            qb_hit = int(qb_hit)
+        else:
+            qb_hit = 0
         
         def_int = row.find('td', attrs={'data-stat':'def_int'}).get_text()
         
@@ -265,9 +395,13 @@ def get_season_stats(url):
         defense_dict[player_year_id] = {'Name': name,
                                         'Team': team,
                                         'Year': year,
+                                        'Age': age,
+                                        'GP': gp,
+                                        'GS': gs,
                                         'SOLO TCKL': solo_tckl,
                                         'TFL': tfl,
                                         'SACK': sacks,
+                                        'HIT': qb_hit,
                                         'INT': def_int,
                                         'PBU': pbu,
                                         'FF': ff,
@@ -277,105 +411,32 @@ def get_season_stats(url):
     return passing_dict, rush_rec_dict, defense_dict
 
 
-def get_season_stats_for_url_list(url_list):
+def nfl_job():
     """
     """
     
-    full_pass_dict = {}
-    full_rush_rec_dict = {}
-    full_defense_dict = {}
+    start_year = 2000
+    end_year = 2009
     
-    i = 1
+    url_list = get_all_nfl_teams_for_year_range(start_year, end_year)
     
-    for url in url_list:
-        d1, d2, d3 = get_season_stats(url)
-    
-        full_pass_dict.update(d1)
-        full_rush_rec_dict.update(d2)
-        full_defense_dict.update(d3)
-        
-        print(i)
-        i += 1
-        wait_time = random.randint(15, 60)
-        time.sleep(wait_time)
-        
-    return full_pass_dict, full_rush_rec_dict, full_defense_dict
-
-
-def calculate_market_shares(df, stat):
-    """
-    """
-    
-    team_df = df.groupby(['Team', 'Year'], as_index=True)[stat].agg('sum')
-    
-    
-    def calculate_row_share(row):
-        """
-        """
-        
-        team = row['Team']
-        year = row['Year']
-        
-        player_stat = row[stat]
-        team_stat = team_df[team][year]
-        
-        if team_stat == 0:
-            share = 0
-        else:
-            share = round(player_stat / team_stat, 2)
-        
-        return share
-    
-    
-    new_col = df.apply(lambda row: calculate_row_share(row), axis=1)
-    
-    return new_col
-
-
-def append_market_share_data(filename, stats_list):
-    """
-    """
-    
-    df = open_csv_to_df(filename, index='PlayerYearID')
-    
-    for stat in stats_list:
-        new_col = stat + ' SHARE'
-        df[new_col] = calculate_market_shares(df, stat)
-    
-    new_filename = filename[:-4] + '_shares.csv'
-    
-    save_df_to_csv(df, new_filename, col_headers=True, index=True,
-               index_label='PlayerYearID', mode='w')
-    
-    return df
-
-
-def job():
-    """
-    """
-    
-    start_year = 2018
-    end_year = 2018
-    
-    url_list = get_all_fbs_teams_for_year_range(start_year, end_year)
-    
-    d1, d2, d3 = get_season_stats_for_url_list(url_list)
+    d1, d2, d3 = get_season_stats_for_url_list(url_list, get_nfl_season_stats)
     
     df1 = pd.DataFrame.from_dict(d1, orient='index')
     df2 = pd.DataFrame.from_dict(d2, orient='index')
     df3 = pd.DataFrame.from_dict(d3, orient='index')
     
-    save_df_to_csv(df1, 'Data/passing.csv', col_headers=False, index=True,
+    save_df_to_csv(df1, 'Data/NFL/passing.csv', col_headers=False, index=True,
                    index_label='PlayerYearID', mode='a')
-    save_df_to_csv(df2, 'Data/rush_receiving.csv', col_headers=False, index=True,
+    save_df_to_csv(df2, 'Data/NFL/rush_receiving.csv', col_headers=False, index=True,
                    index_label='PlayerYearID', mode='a')
-    save_df_to_csv(df3, 'Data/defense.csv', col_headers=False, index=True,
+    save_df_to_csv(df3, 'Data/NFL/defense.csv', col_headers=False, index=True,
                    index_label='PlayerYearID', mode='a')
     
     rush_rec_stats_list = ['RUSH ATT', 'RUSH YDS', 'RUSH TD', 'REC', 'REC YDS', 'REC TD']
-    rush_rec_shares = append_market_share_data('Data/rush_receiving.csv', rush_rec_stats_list)
+    rush_rec_shares = append_market_share_data('Data/NFL/rush_receiving.csv', rush_rec_stats_list)
     
     def_stats_list = ['SOLO TCKL', 'TFL', 'SACK', 'INT', 'PBU', 'FF']
-    def_shares = append_market_share_data('Data/defense.csv', def_stats_list)
+    def_shares = append_market_share_data('Data/NFL/defense.csv', def_stats_list)
     
     return df1, df2, df3, rush_rec_shares, def_shares
